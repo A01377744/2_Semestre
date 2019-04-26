@@ -1,0 +1,46 @@
+import paho.mqtt.client as mqtt
+import serial
+import time
+
+client = mqtt.Client("Claudio")
+client.connect("broker.hivemq.com")
+ser = serial.Serial('com5', 9600)
+
+contador = 0
+contadorHora = 0
+variable = 0
+
+while True:
+    a = ser.readline()
+    a = a.rstrip()
+    a = float(a)
+    x = time.strftime('%S')
+    y = time.strftime("%M")
+    if a < 50:
+        contador = contador + 1
+        variable = 1
+        b = a
+        while variable == 1:
+            contador = contador
+            c = ser.readline()
+            c = c.rstrip()
+            c = float(c)
+            if c <= b-10 or c >= b+10:
+                variable = 0
+
+        print(contador)
+    if x == '00':
+        print(time.strftime('%M'), contador)
+        tiempo = time.strftime('%M'), contador
+        client.loop_start()
+        client.publish("minuto", "Pasaron %d persona/s en el último minuto" % contador, 0)
+        time.sleep(1)
+        contadorHora = contadorHora + contador
+        contador = 0
+
+    if y == "00":
+        tiempoHora = time.strftime('%M'), contadorHora
+        client.loop_start()
+        client.publish("hora", "Pasaron %d persona/s en la última hora" % contadorHora, 0)
+        time.sleep(60)
+        contadorHora = 0
